@@ -1,0 +1,21 @@
+name: code line length
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No code line may exceed 55 characters
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            n=$(awk 'length($0) > 55 {print FILENAME":"FNR": "length($0)}' "$f")
+            if [ -n "$n" ]; then echo "$n"; fail=1; fi
+          done < <(find . -name '*.py' -not -path './.venv/*')
+          if [ "$fail" -eq 1 ]; then
+            echo "Lines over 55 chars break Kindle rendering."
+            exit 1
+          fi
+          echo "All code lines within 55 characters."
